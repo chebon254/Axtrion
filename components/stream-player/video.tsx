@@ -1,55 +1,67 @@
-"use client";
+// components/stream-player/video.tsx
 
-import { ConnectionState, Track } from "livekit-client";
-import { 
-  useConnectionState,
-  useRemoteParticipant,
-  useTracks,
-} from "@livekit/components-react"
+import React, { useState } from 'react';
+import { ConnectionState } from 'livekit-client';
+import { createIngress } from '@/actions/ingress';
+import { IngressInput } from "livekit-server-sdk";
 
-import { Skeleton } from "@/components/ui/skeleton";
-
-import { OfflineVideo } from "./offline-video";
-import { LoadingVideo } from "./loading-video";
-import { LiveVideo } from "./live-video";
+import WebcamStream from './webcam-stream';
+import LiveVideo from './live-video';
 
 interface VideoProps {
   hostName: string;
   hostIdentity: string;
-};
+}
 
-export const Video = ({
-  hostName,
-  hostIdentity,
-}: VideoProps) => {
-  const connectionState = useConnectionState();
-  const participant = useRemoteParticipant(hostIdentity);
-  const tracks = useTracks([
-    Track.Source.Camera,
-    Track.Source.Microphone,
-  ]).filter((track) => track.participant.identity === hostIdentity);
+const Video: React.FC<VideoProps> = ({ hostName, hostIdentity }) => {
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.Disconnected);
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
 
-  let content;
+  const handleStream = (stream: MediaStream) => {
+    setStream(stream);
+  };
 
-  if (!participant && connectionState === ConnectionState.Connected) {
-    content = <OfflineVideo username={hostName} />;
-  } else if (!participant || tracks.length === 0) {
-    content = <LoadingVideo label={connectionState} />
-  } else {
-    content = <LiveVideo participant={participant} />
+  const handleStartStream = async () => {
+    try {
+      setIsStreaming(true);
+      await createIngress(IngressInput.RTMP_INPUT); // Set ingress type to RTMP
+    } catch (error) {
+      console.error('Failed to start stream:', error);
+    }
+  };
+
+  const handleEndStream = () => {
+    // Add logic to end the stream
+    setIsStreaming(false);
   };
 
   return (
     <div className="aspect-video border-b group relative">
-      {content}
+      {stream ? (
+        <>
+          <LiveVideo stream={stream} />
+          {isStreaming ? (
+            <button 
+              onClick={handleEndStream} 
+              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded m-4 inline-block"
+            >
+              End Stream
+            </button>
+          ) : (
+            <button 
+              onClick={handleStartStream} 
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded m-4 inline-block"
+            >
+              Start Stream
+            </button>
+          )}
+        </>
+      ) : (
+        <WebcamStream onStream={handleStream} />
+      )}
     </div>
   );
 };
 
-export const VideoSkeleton = () => {
-  return (
-    <div className="aspect-video border-x border-background">
-      <Skeleton className="h-full w-full rounded-none" />
-    </div>
-  );
-};
+export default Video;
