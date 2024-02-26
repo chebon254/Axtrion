@@ -11,7 +11,7 @@ import { InfoCard } from "./info-card";
 import { AboutCard } from "./about-card";
 import { ChatToggle } from "./chat-toggle";
 import { Chat, ChatSkeleton } from "./chat";
-import Video from "./video";
+import { Video, VideoSkeleton } from "./video";
 import { Header, HeaderSkeleton } from "./header";
 
 type CustomStream = {
@@ -51,6 +51,9 @@ export const StreamPlayer = ({
   } = useViewerToken(user.id);
   const { collapsed } = useChatSidebar((state) => state);
 
+  if (!token || !name || !identity) {
+    return <StreamPlayerSkeleton />
+  }
 
   return (
     <>
@@ -119,6 +122,7 @@ export const StreamPlayerSkeleton = () => {
   return (
     <div className="grid grid-cols-1 lg:gap-y-0 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 h-full">
       <div className="space-y-4 col-span-1 lg:col-span-2 xl:col-span-2 2xl:col-span-5 lg:overflow-y-auto hidden-scrollbar pb-10">
+        <VideoSkeleton />
         <HeaderSkeleton />
       </div>
       <div className="col-span-1 bg-background">

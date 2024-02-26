@@ -22,6 +22,11 @@ export const Navigation = () => {
       icon: Fullscreen,
     },
     {
+      label: "Keys",
+      href: `/u/${user?.username}/keys`,
+      icon: KeyRound,
+    },
+    {
       label: "Chat",
       href: `/u/${user?.username}/chat`,
       icon: MessageSquare,
